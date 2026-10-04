@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Validate template
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate memory structure
+        shell: pwsh
+        run: ./memory/check-memory.ps1
+
+      - name: Compile safety hook
+        shell: pwsh
+        run: python -m py_compile ./hooks/pre_tool_guard.py
+
+      - name: Test installer in isolated directory
+        shell: pwsh
+        run: |
+          $target = Join-Path $env:RUNNER_TEMP 'codex-memory-install-test'
+          if (Test-Path -LiteralPath $target) {
+            Remove-Item -LiteralPath $target -Recurse -Force
+          }
+          ./install.ps1 -InstallRoot $target
+          if (-not (Test-Path -LiteralPath (Join-Path $target 'MEMORY.md'))) {
+            throw 'Installed MEMORY.md was not found.'
+          }
+          if (-not (Test-Path -LiteralPath (Join-Path $target 'RULES.md'))) {
+            throw 'Installed RULES.md was not found.'
+          }
+          Remove-Item -LiteralPath $target -Recurse -Force
+
+      - name: Scan public package for personal data
+        shell: pwsh
+        run: |
+          $patterns = @(
+          )
+          # 只扫描记忆数据模板，避免 README 中的安全检查示例触发误报。
+          $files = Get-ChildItem -Path './memory' -Recurse -File
+          foreach ($pattern in $patterns) {
+            $hit = Select-String -Path $files.FullName -Pattern $pattern -SimpleMatch -ErrorAction SilentlyContinue
+            if ($hit) {
+              throw "Personal-data pattern found: $pattern"
+            }
+          }
