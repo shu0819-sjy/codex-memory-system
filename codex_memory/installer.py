@@ -166,19 +166,16 @@ def _isLinkLike(path: Path) -> bool:
 
 
 def _assertSafeAncestors(path: Path, label: str) -> None:
-  """功能：确认路径及其所有现存祖先都不是链接或重解析点。
+  """功能：确认目标路径节点本身不是链接或重解析点。
 
   入参：path 为目标路径，label 为安全错误中的路径角色。
   返回值：无，发现链接类祖先时抛出 InstallError。
-  边界情况：不存在的中间目录会跳过，检查持续到文件系统根目录。
+  边界情况：操作系统可能把临时目录祖先实现为别名链接，例如 macOS 的 /var；
+  祖先目录不在模板或目标树的控制范围内，因此由树遍历逻辑单独检查树内节点。
   """
-  currentPath = path.absolute()
-  while True:
-    if _pathExists(currentPath) and _isLinkLike(currentPath):
-      raise InstallError(f'{label}包含链接或重解析点: {currentPath}')
-    if currentPath.parent == currentPath:
-      return
-    currentPath = currentPath.parent
+  absolutePath = path.absolute()
+  if _pathExists(absolutePath) and _isLinkLike(absolutePath):
+    raise InstallError(f'{label}包含链接或重解析点: {absolutePath}')
 
 
 def _assertDisjointTrees(sourceRoot: Path, targetRoot: Path) -> None:
