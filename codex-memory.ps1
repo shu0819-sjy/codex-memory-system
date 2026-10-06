@@ -1,4 +1,9 @@
-$cliArguments = @($args)
+param(
+  [Parameter(ValueFromRemainingArguments = $true)]
+  [string[]] $cliArguments
+)
+
+$cliArguments = @($cliArguments)
 $pythonCommand = $null
 $pythonPrefix = @()
 
