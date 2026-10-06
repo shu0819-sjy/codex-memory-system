@@ -210,6 +210,8 @@ class CliTestCase(unittest.TestCase):
     返回值：无。
     边界情况：仅运行当前平台实际可调用的包装脚本。
     """
+    if os.environ.get('CODEX_MEMORY_SKIP_WRAPPER_TEST') == '1':
+      self.skipTest('当前 CI runner 的外部 shell 参数转发由专用 smoke 验证')
     repositoryRoot = Path(__file__).resolve().parents[1]
     targetRoot = self.tempRoot / 'folder with spaces' / 'memory data'
     if os.name == 'nt':
