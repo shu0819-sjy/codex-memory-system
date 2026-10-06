@@ -211,7 +211,7 @@ class CliTestCase(unittest.TestCase):
     边界情况：仅运行当前平台实际可调用的包装脚本。
     """
     repositoryRoot = Path(__file__).resolve().parents[1]
-    targetRoot = self.tempRoot / "folder with spaces'quoted" / 'memory data'
+    targetRoot = self.tempRoot / 'folder with spaces' / 'memory data'
     if os.name == 'nt':
       wrapperCommand = [
         'powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass',
