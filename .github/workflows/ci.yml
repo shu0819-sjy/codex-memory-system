@@ -11,47 +11,35 @@ permissions:
 
 jobs:
   quality:
-    name: Validate template
-    runs-on: windows-latest
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        python-version: ['3.11', '3.12', '3.13', '3.14']
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate memory structure
-        shell: pwsh
-        run: ./memory/check-memory.ps1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
 
-      - name: Compile safety hook
-        shell: pwsh
-        run: python -m py_compile ./hooks/pre_tool_guard.py
+      - name: Compile Python sources
+        run: python -m compileall -q codex_memory tests hooks
 
-      - name: Test installer in isolated directory
-        shell: pwsh
-        run: |
-          $target = Join-Path $env:RUNNER_TEMP 'codex-memory-install-test'
-          if (Test-Path -LiteralPath $target) {
-            Remove-Item -LiteralPath $target -Recurse -Force
-          }
-          ./install.ps1 -InstallRoot $target
-          if (-not (Test-Path -LiteralPath (Join-Path $target 'MEMORY.md'))) {
-            throw 'Installed MEMORY.md was not found.'
-          }
-          if (-not (Test-Path -LiteralPath (Join-Path $target 'RULES.md'))) {
-            throw 'Installed RULES.md was not found.'
-          }
-          Remove-Item -LiteralPath $target -Recurse -Force
+      - name: Run unit and public template privacy tests
+        run: python -m unittest discover -v
 
-      - name: Scan public package for personal data
-        shell: pwsh
-        run: |
-          $patterns = @(
-          )
-          # 只扫描记忆数据模板，避免 README 中的安全检查示例触发误报。
-          $files = Get-ChildItem -Path './memory' -Recurse -File
-          foreach ($pattern in $patterns) {
-            $hit = Select-String -Path $files.FullName -Pattern $pattern -SimpleMatch -ErrorAction SilentlyContinue
-            if ($hit) {
-              throw "Personal-data pattern found: $pattern"
-            }
-          }
+      - name: Check template without modifying it
+        run: python -m codex_memory check --root memory
+
+      - name: Check POSIX wrapper syntax
+        if: runner.os != 'Windows'
+        run: sh -n ./codex-memory
+
+      - name: Smoke test install, update and platform wrapper
+        run: python scripts/install_smoke.py

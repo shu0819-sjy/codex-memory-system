@@ -1,0 +1,15 @@
+#!/bin/sh
+
+pythonBin=''
+if command -v python3 >/dev/null 2>&1 && python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' >/dev/null 2>&1; then
+  pythonBin='python3'
+elif command -v python >/dev/null 2>&1 && python -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' >/dev/null 2>&1; then
+  pythonBin='python'
+else
+  printf '%s\n' '需要 Python 3.11 或更新版本。' >&2
+  exit 2
+fi
+
+scriptDir=$(CDPATH= cd -P "$(dirname "$0")" && pwd) || exit 2
+cd "$scriptDir" || exit 2
+exec "$pythonBin" -m codex_memory "$@"
