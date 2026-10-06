@@ -1,0 +1,28 @@
+{
+  "categories": [
+    "学业",
+    "出国申请",
+    "竞赛",
+    "项目",
+    "工具与环境",
+    "人设",
+    "任务要求"
+  ],
+  "hotLimitBytes": 10240,
+  "spaceLimitBytes": 4096,
+  "rulesLimitBytes": 4096,
+  "activeTaskLimit": 3,
+  "staleDays": 30,
+  "archiveNamePattern": "^\\d{4}-\\d{2}-.+\\.md$",
+  "privacyPatterns": [
+    "api_key=",
+    "access_token=",
+    "password=",
+    "secret=",
+    "-----BEGIN PRIVATE KEY-----",
+    "C:\\Users\\",
+    "D:\\",
+    "/Users/",
+    "/home/"
+  ]
+}
