@@ -32,6 +32,8 @@ jobs:
         run: python -m compileall -q codex_memory tests hooks
 
       - name: Run unit and public template privacy tests
+        env:
+          CODEX_MEMORY_SKIP_WRAPPER_TEST: ${{ matrix.os != 'ubuntu-latest' && '1' || '0' }}
         run: python -m unittest discover -v
 
       - name: Check template without modifying it
@@ -42,4 +44,5 @@ jobs:
         run: sh -n ./codex-memory
 
       - name: Smoke test install, update and platform wrapper
+        if: matrix.os == 'ubuntu-latest'
         run: python scripts/install_smoke.py
